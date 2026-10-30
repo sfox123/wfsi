@@ -32,3 +32,8 @@ returns json language sql stable security invoker set search_path = public as $$
                                       from source_run order by id desc limit 25) r)
   );
 $$;
+
+-- Later revisions applied to the live project:
+--   real_data_replaces_dummy_per_indicator : observation_current hides all dummy rows of an indicator once any real run exists
+--   pipeline_status_count_current_only     : pipeline_status counts only current real values (not every historical run)
+--   pipeline_snapshot_with_focus_country   : pipeline_snapshot(focus text default 'LKA') adds the focus country's latest real values
