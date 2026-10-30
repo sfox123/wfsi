@@ -1,0 +1,398 @@
+<title>WSFI Data Pipeline</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a pipeline control sheet. Header + status line, a left-to-right flow of
+   the four stages, pillar progress bars, then the indicator register and the run log. */
+:root {
+  --bg: #f3f5f6;
+  --surface: #ffffff;
+  --ink: #15212b;
+  --muted: #5b6b78;
+  --line: #d9e0e5;
+  --accent: #1d5c86;          /* aqueduct blue */
+  --accent-soft: #e3eef6;
+  --ok: #2f7d4f;   --ok-soft: #e2f1e8;
+  --warn: #a2650f; --warn-soft: #f8ecd8;
+  --idle: #7d8a95; --idle-soft: #eceff2;
+  --font-display: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f161c; --surface: #16212a; --ink: #e4ebf0; --muted: #93a3b0; --line: #283743;
+    --accent: #6fb0dc; --accent-soft: #1a3446;
+    --ok: #6cc596; --ok-soft: #173327; --warn: #e3a64c; --warn-soft: #3a2a12; --idle: #8a98a4; --idle-soft: #212d37;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f161c; --surface: #16212a; --ink: #e4ebf0; --muted: #93a3b0; --line: #283743;
+  --accent: #6fb0dc; --accent-soft: #1a3446;
+  --ok: #6cc596; --ok-soft: #173327; --warn: #e3a64c; --warn-soft: #3a2a12; --idle: #8a98a4; --idle-soft: #212d37;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 28px 56px;
+}
+.wrap { max-width: 1120px; margin: 0 auto; display: grid; gap: 28px; }
+h1, h2 { font-family: var(--font-display); text-wrap: balance; margin: 0; letter-spacing: .01em; }
+h1 { font-size: clamp(28px, 4.2vw, 40px); font-weight: 700; line-height: 1.1; }
+h2 { font-size: 20px; font-weight: 600; }
+.eyebrow { font-family: var(--font-mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.mono, .num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+p { margin: 0; }
+.lede { color: var(--muted); max-width: 68ch; }
+
+/* header */
+header { display: grid; gap: 12px; }
+.statusbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; font-size: 13px; color: var(--muted); }
+.mode { display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: 12px; padding: 4px 10px; border-radius: 999px; background: var(--idle-soft); color: var(--ink); }
+.mode::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--idle); }
+.mode[data-mode="live"]::before { background: var(--ok); box-shadow: 0 0 0 3px var(--ok-soft); }
+.mode[data-mode="loading"]::before { background: var(--accent); }
+button.btn {
+  font: 500 13px var(--font-body); color: var(--accent); background: transparent; border: 1px solid var(--accent);
+  border-radius: 6px; padding: 5px 12px; cursor: pointer;
+}
+button.btn:hover { background: var(--accent-soft); }
+button.btn:focus-visible, .filter:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+button.btn[disabled] { opacity: .5; cursor: progress; }
+.notice { font-size: 13px; color: var(--warn); }
+
+/* summary */
+.summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.stat { background: var(--surface); padding: 16px 18px; display: grid; gap: 2px; }
+.stat .num { font-size: 28px; font-weight: 500; line-height: 1.15; }
+.stat .lbl { font-size: 13px; color: var(--muted); }
+.stat.ok .num { color: var(--ok); } .stat.warn .num { color: var(--warn); }
+
+/* flow */
+.flow { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.stage { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: grid; gap: 10px; align-content: start; min-width: 0; }
+.stage:not(:last-child)::after {
+  content: ""; position: absolute; right: -11px; top: 26px; width: 8px; height: 8px;
+  border-top: 2px solid var(--accent); border-right: 2px solid var(--accent); transform: rotate(45deg); background: transparent;
+}
+.stage h3 { margin: 0; font: 600 15px var(--font-display); letter-spacing: .02em; }
+.stage .step { font-family: var(--font-mono); font-size: 11px; color: var(--accent); letter-spacing: .08em; }
+.stage ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; font-size: 13px; }
+.stage li { display: flex; justify-content: space-between; gap: 8px; }
+.stage li span:first-child { min-width: 0; }
+.stage li .num { color: var(--muted); }
+
+/* pillars */
+.pillars { display: grid; gap: 10px; }
+.prow { display: grid; grid-template-columns: 220px minmax(0, 1fr) 92px; align-items: center; gap: 14px; font-size: 14px; }
+.prow .pname { display: flex; gap: 8px; align-items: baseline; min-width: 0; }
+.prow .pcode { font-family: var(--font-mono); font-weight: 500; color: var(--accent); }
+.bar { height: 12px; border-radius: 3px; background: var(--idle-soft); display: flex; overflow: hidden; }
+.bar i { display: block; height: 100%; }
+.bar .b-ok { background: var(--ok); } .bar .b-warn { background: var(--warn); opacity: .55; }
+.prow .num { text-align: right; font-size: 13px; color: var(--muted); }
+.legend { display: flex; flex-wrap: wrap; gap: 16px; font-size: 12px; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+
+/* register */
+.sect { display: grid; gap: 14px; }
+.sect-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: 12px; }
+.filters { display: flex; flex-wrap: wrap; gap: 6px; }
+.filter { font: 500 12px var(--font-body); border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 999px; padding: 4px 11px; cursor: pointer; }
+.filter[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--surface); }
+.tablewrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 760px; }
+th { text-align: left; font: 500 11px var(--font-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); padding: 10px 12px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+td { padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+tr:last-child td { border-bottom: 0; }
+tr.group td { background: var(--bg); font: 600 12px var(--font-display); letter-spacing: .04em; color: var(--muted); padding-block: 7px; }
+td.code { font-family: var(--font-mono); font-weight: 500; white-space: nowrap; }
+td .sub { display: block; color: var(--muted); font-size: 12px; }
+.chip { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; white-space: nowrap; padding: 2px 9px; border-radius: 4px; background: var(--accent-soft); color: var(--ink); }
+.st { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500; white-space: nowrap; }
+.st::before { content: ""; width: 8px; height: 8px; border-radius: 2px; }
+.st.collected { color: var(--ok); }  .st.collected::before { background: var(--ok); }
+.st.dummy { color: var(--warn); }    .st.dummy::before { background: var(--warn); }
+.st.none { color: var(--idle); }     .st.none::before { background: var(--idle); }
+
+/* runs */
+.runs { display: grid; gap: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+.run { display: grid; grid-template-columns: 56px minmax(0, 1fr) auto; gap: 14px; padding: 12px 16px; border-bottom: 1px solid var(--line); align-items: baseline; }
+.run:last-child { border-bottom: 0; }
+.run .id { font-family: var(--font-mono); color: var(--muted); font-size: 12px; }
+.run .src { font-weight: 500; }
+.run .codes { font-family: var(--font-mono); font-size: 11px; color: var(--muted); overflow-wrap: anywhere; }
+.run .meta { text-align: right; font-size: 12px; color: var(--muted); white-space: nowrap; }
+.tag { font: 500 10px var(--font-mono); letter-spacing: .06em; text-transform: uppercase; padding: 1px 6px; border-radius: 3px; margin-left: 6px; }
+.tag.syn { background: var(--warn-soft); color: var(--warn); } .tag.real { background: var(--ok-soft); color: var(--ok); }
+footer { font-size: 12px; color: var(--muted); display: grid; gap: 4px; }
+footer code { font-family: var(--font-mono); }
+
+@media (max-width: 860px) {
+  .flow { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .stage::after { display: none; }
+  .summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .prow { grid-template-columns: 150px minmax(0, 1fr) 72px; }
+}
+@media (max-width: 520px) {
+  .flow { grid-template-columns: 1fr; }
+  .prow { grid-template-columns: 1fr; gap: 4px; }
+  .prow .num { text-align: left; }
+  .run { grid-template-columns: 1fr; gap: 2px; }
+  .run .meta { text-align: left; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .bar i { transition: width .5s ease; }
+}
+</style>
+
+<div class="wrap">
+  <header>
+    <span class="eyebrow">Water Security Futures Index · IWMI</span>
+    <h1>WSFI Data Pipeline</h1>
+    <p class="lede">Where each of the index's indicators comes from, how it is collected, and what has reached the database so far. Values marked dummy are synthetic placeholders that disappear as real data is loaded.</p>
+    <div class="statusbar">
+      <span class="mode" id="mode" data-mode="snapshot">Snapshot</span>
+      <span id="asof"></span>
+      <button class="btn" id="refresh" type="button">Refresh live data</button>
+      <span class="notice" id="notice" hidden></span>
+    </div>
+  </header>
+
+  <section class="summary" aria-label="Summary">
+    <div class="stat"><span class="num" id="s-total">–</span><span class="lbl">indicators in the register</span></div>
+    <div class="stat ok"><span class="num" id="s-real">–</span><span class="lbl">collected from real sources</span></div>
+    <div class="stat warn"><span class="num" id="s-dummy">–</span><span class="lbl">still on dummy data</span></div>
+    <div class="stat"><span class="num" id="s-units">–</span><span class="lbl" id="s-units-lbl">spatial units</span></div>
+  </section>
+
+  <section class="sect" aria-labelledby="flow-h">
+    <h2 id="flow-h">How data flows</h2>
+    <div class="flow">
+      <div class="stage">
+        <span class="step">STAGE 1</span><h3>Sources</h3>
+        <ul id="flow-sources"></ul>
+      </div>
+      <div class="stage">
+        <span class="step">STAGE 2</span><h3>Collection</h3>
+        <ul id="flow-collect">
+          <li><span>Scheduled API pulls</span><span class="num">GitHub Actions</span></li>
+          <li><span>Gridded summaries</span><span class="num">Earth Engine</span></li>
+          <li><span>Batch model data</span><span class="num">Python</span></li>
+          <li><span>Checked file uploads</span><span class="num">Loader</span></li>
+          <li><span>Expert scores</span><span class="num">Rubric</span></li>
+        </ul>
+      </div>
+      <div class="stage">
+        <span class="step">STAGE 3</span><h3>Database</h3>
+        <ul>
+          <li><span>Observations</span><span class="num" id="f-obs">–</span></li>
+          <li><span>Data pulls logged</span><span class="num" id="f-runs">–</span></li>
+          <li><span>Raw files</span><span class="num">Storage</span></li>
+          <li><span>Weight sets</span><span class="num">versioned</span></li>
+        </ul>
+      </div>
+      <div class="stage">
+        <span class="step">STAGE 4</span><h3>Outputs</h3>
+        <ul>
+          <li><span>REST API</span><span class="num">live</span></li>
+          <li><span>Index scores</span><span class="num">pending rules</span></li>
+          <li><span>Sensitivity analysis</span><span class="num">planned</span></li>
+          <li><span>Versioned releases</span><span class="num">planned</span></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="sect" aria-labelledby="pill-h">
+    <div class="sect-head">
+      <h2 id="pill-h">Progress by pillar</h2>
+      <div class="legend"><span><i style="background:var(--ok)"></i>Real data</span><span><i style="background:var(--warn);opacity:.55"></i>Dummy only</span><span><i style="background:var(--idle-soft)"></i>Nothing yet</span></div>
+    </div>
+    <div class="pillars" id="pillars"></div>
+  </section>
+
+  <section class="sect" aria-labelledby="reg-h">
+    <div class="sect-head">
+      <h2 id="reg-h">Indicator register</h2>
+      <div class="filters" id="filters" role="group" aria-label="Filter by collection route"></div>
+    </div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Code</th><th>Indicator</th><th>Source</th><th>Collected by</th><th>Status</th><th>Real coverage</th><th>Last pull</th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="sect" aria-labelledby="runs-h">
+    <h2 id="runs-h">Data pulls</h2>
+    <div class="runs" id="runs"></div>
+  </section>
+
+  <footer>
+    <span>Database: Supabase project <code>wsfi</code> (IWMI). Each value is linked to the data pull that produced it.</span>
+    <span>Code and Earth Engine job spec: <a href="https://github.com/sfox123/wfsi" style="color:var(--accent)">github.com/sfox123/wfsi</a></span>
+  </footer>
+</div>
+
+<script>
+const SNAPSHOT = /*__SNAPSHOT__*/null;
+const SUPABASE_URL = "https://xdbrtdcrhqabckirhssu.supabase.co";
+const SUPABASE_KEY = "sb_publishable_3M1mEDnK1mNPE6uicQrs_Q_QP5bhUqU";
+const PROJECT_ID = "xdbrtdcrhqabckirhssu";
+
+const PILLARS = { A: "Future hydro-climatic pressure", B: "Exposure, demand & stability", C: "Anticipatory capacity", D: "Adaptive & governance", E: "Equity & inclusion", X: "Supporting data" };
+const ROUTES = { api: "Automatic API pull", earth_engine: "Earth Engine job", python_batch: "Python batch job", upload: "File upload", expert: "Expert scoring" };
+let current = SNAPSHOT, routeFilter = "all";
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const fmtDate = iso => iso ? new Date(iso).toLocaleString(undefined, { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "–";
+
+function render(d, mode) {
+  current = d;
+  const ind = d.indicators || [];
+  const runs = d.runs || [];
+  const idx = ind.filter(i => i.in_index);
+  $("s-total").textContent = ind.length;
+  $("s-real").textContent = ind.filter(i => i.status === "collected").length;
+  $("s-dummy").textContent = ind.filter(i => i.status === "dummy").length;
+  $("s-units").textContent = d.units.adm0 + d.units.adm2;
+  $("s-units-lbl").textContent = `${d.units.adm0} countries + ${d.units.adm2} Sri Lanka districts`;
+  $("f-obs").textContent = ind.reduce((a, i) => a + i.real_values + i.dummy_values, 0).toLocaleString();
+  $("f-runs").textContent = runs.length;
+
+  const m = $("mode");
+  m.dataset.mode = mode;
+  m.textContent = mode === "live" ? "Live" : "Snapshot";
+  $("asof").textContent = (mode === "live" ? "Read from the database " : "Snapshot taken ") + fmtDate(d.as_of);
+
+  // sources by route
+  const byRoute = {};
+  ind.forEach(i => { byRoute[i.route] = (byRoute[i.route] || 0) + 1; });
+  $("flow-sources").innerHTML = Object.keys(ROUTES).map(r =>
+    `<li><span>${esc(ROUTES[r])}</span><span class="num">${byRoute[r] || 0}</span></li>`).join("");
+
+  // pillars
+  $("pillars").innerHTML = Object.keys(PILLARS).map(p => {
+    const g = ind.filter(i => i.pillar === p);
+    if (!g.length) return "";
+    const ok = g.filter(i => i.status === "collected").length, du = g.filter(i => i.status === "dummy").length;
+    return `<div class="prow"><div class="pname"><span class="pcode">${p}</span><span>${esc(PILLARS[p])}</span></div>
+      <div class="bar" role="img" aria-label="${ok} of ${g.length} collected, ${du} on dummy data">
+        <i class="b-ok" style="width:${100 * ok / g.length}%"></i><i class="b-warn" style="width:${100 * du / g.length}%"></i></div>
+      <span class="num">${ok} / ${g.length} real</span></div>`;
+  }).join("");
+
+  // filters
+  const opts = [["all", "All"]].concat(Object.entries(ROUTES).map(([k, v]) => [k, v]));
+  $("filters").innerHTML = opts.map(([k, v]) =>
+    `<button type="button" class="filter" id="flt-${k}" data-route="${k}" aria-pressed="${k === routeFilter}">${esc(v)}${k === "all" ? "" : ` · ${byRoute[k] || 0}`}</button>`).join("");
+
+  renderRows();
+
+  $("runs").innerHTML = runs.length ? runs.map(r => `
+    <div class="run"><span class="id">#${r.id}</span>
+      <div><span class="src">${esc(r.source)}</span><span class="tag ${r.is_synthetic ? "syn" : "real"}">${r.is_synthetic ? "dummy" : "real"}</span>
+        <div class="codes">${esc((r.indicator_codes || []).join(" "))}</div></div>
+      <span class="meta"><span class="num">${(r.row_count ?? 0).toLocaleString()}</span> rows · ${fmtDate(r.retrieved_at)}</span></div>`).join("")
+    : `<div class="run"><span></span><span>No data pulls yet.</span><span></span></div>`;
+}
+
+function renderRows() {
+  const ind = (current.indicators || []).filter(i => routeFilter === "all" || i.route === routeFilter);
+  let html = "", last = null;
+  for (const i of ind) {
+    if (i.pillar !== last) { html += `<tr class="group"><td colspan="7">${i.pillar} · ${esc(PILLARS[i.pillar])}</td></tr>`; last = i.pillar; }
+    const label = { collected: "Real data", dummy: "Dummy only", none: "Not started" }[i.status];
+    html += `<tr>
+      <td class="code">${esc(i.code)}</td>
+      <td>${esc(i.name)}<span class="sub">${esc(i.unit)}</span></td>
+      <td>${esc(i.source)}</td>
+      <td><span class="chip">${esc(ROUTES[i.route] || i.route)}</span><span class="sub">${esc(i.route_detail)}</span></td>
+      <td><span class="st ${i.status}">${label}</span></td>
+      <td class="num">${i.real_units ? `${i.real_units} units` : "–"}</td>
+      <td class="num">${i.last_real_pull ? fmtDate(i.last_real_pull) : "–"}</td></tr>`;
+  }
+  $("rows").innerHTML = html || `<tr><td colspan="7">No indicators on this route.</td></tr>`;
+}
+
+$("filters").addEventListener("click", e => {
+  const b = e.target.closest(".filter"); if (!b) return;
+  routeFilter = b.dataset.route;
+  document.querySelectorAll(".filter").forEach(x => x.setAttribute("aria-pressed", x.dataset.route === routeFilter));
+  renderRows();
+});
+
+function notice(msg) { const n = $("notice"); n.textContent = msg || ""; n.hidden = !msg; }
+
+// 1) Direct API (works when hosted outside Claude, e.g. GitHub Pages)
+async function fromRest() {
+  const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 8000);
+  try {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/rpc/pipeline_snapshot`, {
+      method: "POST", signal: ctl.signal,
+      headers: { apikey: SUPABASE_KEY, "Content-Type": "application/json" }, body: "{}"
+    });
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    return await r.json();
+  } finally { clearTimeout(t); }
+}
+
+// 2) Through the viewer's Supabase connector (inside Claude)
+function parseSqlPayload(p) {
+  let s = typeof p === "string" ? p : (p && typeof p.result === "string" ? p.result : JSON.stringify(p));
+  const start = s.indexOf("[", s.search(/<untrusted-data-[^>]*>/) + 1);
+  const end = s.lastIndexOf("]");
+  const rows = JSON.parse(s.slice(start, end + 1));
+  return rows[0].s;
+}
+async function fromConnector(mcp) {
+  const res = await mcp.callTool("Supabase", "execute_sql",
+    { project_id: PROJECT_ID, query: "select public.pipeline_snapshot() as s;" }, { cache: false });
+  return parseSqlPayload(res.payload ?? res.content?.[0]?.text);
+}
+const CONNECTOR_MSG = {
+  server_not_connected: "Live data needs the Supabase connector. Add it in claude.ai Settings → Connectors.",
+  needs_reauth: "Reconnect Supabase in claude.ai Settings → Connectors to see live data.",
+  not_in_manifest: "Supabase access is turned off for this page. Showing the snapshot.",
+  approval_required: "Allow Supabase access when asked to see live data.",
+  selection_required: "Choose which Supabase connection to use when prompted.",
+  blocked_by_policy: "Your organisation blocks this connector. Showing the snapshot.",
+  server_unavailable: "Supabase did not answer. Try Refresh in a moment."
+};
+
+let mcpPromise = null;
+function getMcp() {
+  if (!mcpPromise) mcpPromise = (window.claude && window.claude.use) ? window.claude.use("mcp").catch(() => null) : Promise.resolve(null);
+  return mcpPromise;
+}
+
+async function refresh(viaClick) {
+  const btn = $("refresh"); btn.disabled = true; notice("");
+  $("mode").dataset.mode = "loading"; $("mode").textContent = "Loading";
+  try {
+    try { render(await fromRest(), "live"); return; } catch (_) { /* not reachable from here */ }
+    if (!viaClick) {
+      // Only the owner gets an automatic connector call; everyone else sees the snapshot until they click.
+      let owner = false;
+      try { const u = window.claude && window.claude.use ? await window.claude.use("user") : null; owner = u ? !!(await u.isOwner()) : false; } catch (_) {}
+      if (!owner) { render(current, "snapshot"); return; }
+    }
+    const mcp = await getMcp();
+    if (!mcp) { render(current, "snapshot"); if (viaClick) notice("Live data isn't available in this view. Showing the snapshot."); return; }
+    try { render(await fromConnector(mcp), "live"); }
+    catch (e) { render(current, "snapshot"); notice(CONNECTOR_MSG[e && e.code] || "Couldn't read live data. Showing the snapshot."); }
+  } finally { btn.disabled = false; }
+}
+$("refresh").addEventListener("click", () => refresh(true));
+
+render(SNAPSHOT, "snapshot");
+refresh(false);
+</script>
