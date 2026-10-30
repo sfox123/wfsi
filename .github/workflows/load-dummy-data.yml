@@ -1,0 +1,30 @@
+name: Load dummy data
+
+# Manual run: loads the synthetic sample data into the WSFI Supabase database.
+# Needs the repository secret SUPABASE_DB_URL (Supabase dashboard > Connect > Session pooler URI).
+on:
+  workflow_dispatch:
+
+jobs:
+  load:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r ingest/requirements.txt
+      - name: Load national dummy panel
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: >
+          python ingest/load_long_csv.py data/dummy/wsfi_dummy_national_long.csv
+          --source "DUMMY national panel" --synthetic --script-version gen_wsfi_dummy.py
+          --notes "Synthetic data, numpy seed 20261030. Not real values."
+      - name: Load Sri Lanka district dummy data
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: >
+          python ingest/load_long_csv.py data/dummy/wsfi_dummy_lka_districts_long.csv
+          --source "DUMMY Sri Lanka districts" --synthetic --script-version gen_wsfi_dummy.py
+          --notes "Synthetic data, numpy seed 20261030. Not real values."

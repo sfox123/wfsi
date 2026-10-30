@@ -1,0 +1,46 @@
+code,framework_id,pillar,indicator,unit,raw_direction,resolution,cadence,simulated_source,type,is_synthetic
+A1,A1,A,Projected blue-water stress,ratio (withdrawal / available),higher = more risk,Sub-basin→national,Scenario (2030/2050/2080),WRI Aqueduct 4.0 future annual (ws),Direct,True
+A2,A2,A,Projected water depletion,ratio (consumption / renewable supply),higher = more risk,Sub-basin→national,Scenario (2030/2050/2080),WRI Aqueduct 4.0 future annual (wd),Direct,True
+A3a,A3,A,"Green-water availability (mean soil moisture, layers 1–2)",m³/m³,higher = LESS risk (invert),Grid→national,Annual,ERA5-Land monthly,Calculate,True
+A3b,A3,A,"Green-water trend (Sen's slope of soil moisture, 1981–2024)",m³/m³ per decade,negative = drying = more risk,Grid→national,Single value,ERA5-Land monthly,Calculate,True
+A4,A4,A,"Groundwater storage trend (GRACE TWS minus GLDAS SM+snow, 2002–yr)",cm EWT per year,negative = decline = more risk,Grid→national,Annual (rolling trend),GRACE/GRACE-FO JPL Mascon + GLDAS,Calculate,True
+A5a,A5,A,Inter-annual variability,coefficient of variation,higher = more risk,Sub-basin→national,Scenario (2030/2050/2080),WRI Aqueduct 4.0 future annual (iv),Direct,True
+A5b,A5,A,Seasonal variability,coefficient of variation,higher = more risk,Sub-basin→national,Scenario (2030/2050/2080),WRI Aqueduct 4.0 future annual (sv),Direct,True
+A6,A6,A,Hydroclimate whiplash frequency (1991–2024),transitions per decade,higher = more risk,Grid→national,Single value,SPEIbase + Swain et al. (2025) method,Calculate,True
+A7,A7,A,Glacier/snow meltwater dependence,% of runoff from glacier/snow,higher = more risk,Basin→national,Single value,Immerzeel 2020 / Hugonnet 2021,Calculate,True
+A8,A8,A,Population in low-elevation coastal zone exposed to projected SLR,% of population,higher = more risk,Coastal grid→national,Scenario (2050/2100),NASA AR6 SLR tool + GHSL,Calculate,True
+B1,B1,B,Population in high-stress basins (Aqueduct cat ≥3),% of population,higher = more risk,Grid→national,Scenario (2030/2050/2080),WorldPop × Aqueduct future,Calculate,True
+B2,B2,B,GDP in high-stress basins,% of GDP,higher = more risk,Grid→national,Scenario (2030/2050/2080),Wang & Sun SSP GDP × Aqueduct,Calculate,True
+B3,B3,B,Irrigation withdrawal change vs 2015 baseline,% change,higher = more risk,Grid→national,Scenario (2030/2050/2080),ISIMIP3b water use,Calculate,True
+B4,B4,B,Domestic + industrial withdrawal change vs 2015 baseline,% change,higher = more risk,Grid→national,Scenario (2030/2050/2080),ISIMIP3b water use,Calculate,True
+B5,B5,B,Sectoral competition index (Shannon of shares × stress),index 0–1,higher = more risk,National,Irregular (AQUASTAT),AQUASTAT / WDI + Aqueduct,Calculate,True
+B6,B6,B,Agriculture value added,% of GDP,higher = more risk,National,Annual,World Bank WDI NV.AGR.TOTL.ZS,Proxy,True
+B7,B7,B,Water-related conflict events,events per million people per year,higher = more risk,National,Annual,Pacific Institute WCC / ACLED / UCDP,Calculate,True
+B8a,B8,B,Dependency ratio (external renewable water),%,higher = more risk,National,Single value (long-term avg),FAO AQUASTAT,Direct,True
+B8b,B8,B,Flood & drought disaster displacements,"per 100,000 people per year",higher = more risk,National,Annual,IDMC GIDD,Direct,True
+C1,C1,C,Multi-hazard early-warning system score (Sendai G-1),score 0–1,higher = more ready,National,Annual (self-reported),"Sendai Framework Monitor, Target G",Direct,True
+C2,C2,C,"Seasonal precipitation forecast skill (ROC area, lead 1 month)",ROC area 0.5–1,higher = more ready,Grid→national,Single value,C3S hindcasts vs CHIRPS,Calculate,True
+C3,C3,C,S2S / seasonal forecast uptake (expert score),ordinal 0–4,higher = more ready,National,Survey round,Expert scoring rubric (no global dataset),Survey / scoring,True
+C4,C4,C,Active anticipatory-action frameworks,count,higher = more ready,National,Annual,Anticipation Hub overview reports,Direct,True
+C5,C5,C,Pre-arranged finance,US$ per capita,higher = more ready,National,Annual,Anticipation Hub + risk-pool data,Calculate,True
+C6,C6,C,Impact-based forecasting maturity (expert score),ordinal 0–4,higher = more ready,National,Survey round,Expert scoring rubric (no global dataset),Survey / scoring,True
+C7,C7,C,Population covered by at least a 4G mobile network,% of population,higher = more ready,National,Annual,ITU DataHub,Proxy,True
+D1,D1,D,Dam storage capacity per capita,m³ per person,higher = more ready,National,Single value,FAO AQUASTAT dams,Direct,True
+D2,D2,D,Source diversification (Shannon index of withdrawal sources),index 0–1.39,higher = more ready,National,Irregular,FAO AQUASTAT,Calculate,True
+D3,D3,D,Water-use efficiency (SDG 6.4.1),US$ per m³,higher = more ready,National,Annual (2-yr lag),UN SDG Global Database,Direct,True
+D4,D4,D,IWRM implementation (SDG 6.5.1),score 0–100,higher = more ready,National,Triennial survey,UN-Water IWRM portal,Direct,True
+D5,D5,D,Transboundary basin area with operational arrangement (SDG 6.5.2),%,higher = more ready,National,Triennial survey,UN SDG Global Database,Direct,True
+D6,D6,D,"Governance (mean of WGI GE, RQ, RL, CC)",estimate −2.5 to +2.5,higher = more ready,National,Annual,World Bank WGI,Proxy,True
+D7,D7,D,ND-GAIN readiness (economic + social components),score 0–1,higher = more ready,National,Annual,ND-GAIN,Direct,True
+D8,D8,D,Safely treated domestic wastewater (SDG 6.3.1),%,higher = more ready,National,Irregular,UN SDG Global Database,Direct,True
+E1,E1,E,Basic drinking-water access gap (richest − poorest quintile),percentage points,higher = LESS equitable,National (from survey),Irregular (JMP inequality),WHO/UNICEF JMP,Calculate,True
+E2,E2,E,Basic sanitation access gap (richest − poorest quintile),percentage points,higher = LESS equitable,National (from survey),Irregular (JMP inequality),WHO/UNICEF JMP,Calculate,True
+E3,E3,E,Internet use gender parity (female / male),ratio,closer to 1 = more equitable,National,Annual,ITU DataHub,Calculate,True
+E4,E4,E,Concentration index of water investment vs stress,index −1 to +1,negative = investment away from stressed areas,District→national,Single value,Aqueduct + AidData,Calculate,True
+E5,E5,E,Participation level in water governance (SDG 6.b.1),ordinal 0–3,higher = more equitable,National,GLAAS cycle,SDG 6.b.1 / WHO GLAAS,Proxy,True
+E6,E6,E,"Water bill share of income, poorest quintile",% of household income,higher = LESS equitable,National,Irregular,IBNET + World Bank PIP,Calculate,True
+X1,X1,X,Water stress (SDG 6.4.2),%,supporting,National,Annual,UN SDG Global Database,Direct,True
+X2,X2,X,Disaster deaths & affected (SDG 13.1.1),"per 100,000 people",supporting / validation,National,Annual,UN SDG Global Database,Direct,True
+X4,X4,X,Total population,persons,supporting,National,Annual,World Bank WDI SP.POP.TOTL,Direct,True
+X5,X5,X,Total GDP,current US$,supporting,National,Annual,World Bank WDI NY.GDP.MKTP.CD,Direct,True
+X6,X6,X,Renewable internal freshwater per capita,m³ per person,supporting,National,Annual,World Bank WDI ER.H2O.INTR.PC,Direct,True

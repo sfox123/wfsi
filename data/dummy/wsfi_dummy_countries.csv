@@ -1,0 +1,45 @@
+iso3,country,region,is_island,approx_population_millions
+LKA,Sri Lanka,South Asia,True,22.0
+IND,India,South Asia,False,1430.0
+PAK,Pakistan,South Asia,False,240.0
+BGD,Bangladesh,South Asia,False,172.0
+NPL,Nepal,South Asia,False,30.0
+BTN,Bhutan,South Asia,False,0.8
+AFG,Afghanistan,South Asia,False,42.0
+MDV,Maldives,South Asia,True,0.5
+CHN,China,East Asia & Pacific,False,1410.0
+MMR,Myanmar,East Asia & Pacific,False,54.0
+THA,Thailand,East Asia & Pacific,False,72.0
+VNM,Viet Nam,East Asia & Pacific,False,99.0
+KHM,Cambodia,East Asia & Pacific,False,17.0
+IDN,Indonesia,East Asia & Pacific,True,278.0
+PHL,Philippines,East Asia & Pacific,True,117.0
+AUS,Australia,East Asia & Pacific,True,26.0
+NZL,New Zealand,East Asia & Pacific,True,5.2
+FJI,Fiji,East Asia & Pacific,True,0.93
+UZB,Uzbekistan,Europe & Central Asia,False,36.0
+KAZ,Kazakhstan,Europe & Central Asia,False,20.0
+NLD,Netherlands,Europe & Central Asia,False,17.9
+ESP,Spain,Europe & Central Asia,False,48.0
+DEU,Germany,Europe & Central Asia,False,84.0
+IRN,Iran,Middle East & North Africa,False,89.0
+IRQ,Iraq,Middle East & North Africa,False,45.0
+JOR,Jordan,Middle East & North Africa,False,11.0
+SAU,Saudi Arabia,Middle East & North Africa,False,37.0
+EGY,Egypt,Middle East & North Africa,False,112.0
+MAR,Morocco,Middle East & North Africa,False,37.0
+NGA,Nigeria,Sub-Saharan Africa,False,224.0
+ETH,Ethiopia,Sub-Saharan Africa,False,127.0
+KEN,Kenya,Sub-Saharan Africa,False,55.0
+SOM,Somalia,Sub-Saharan Africa,False,18.0
+ZAF,South Africa,Sub-Saharan Africa,False,60.0
+MOZ,Mozambique,Sub-Saharan Africa,False,33.0
+MDG,Madagascar,Sub-Saharan Africa,True,30.0
+BRA,Brazil,Latin America & Caribbean,False,216.0
+PER,Peru,Latin America & Caribbean,False,34.0
+BOL,Bolivia,Latin America & Caribbean,False,12.0
+CHL,Chile,Latin America & Caribbean,False,19.6
+MEX,Mexico,Latin America & Caribbean,False,128.0
+HTI,Haiti,Latin America & Caribbean,False,11.7
+USA,United States,North America,False,335.0
+CAN,Canada,North America,False,40.0
