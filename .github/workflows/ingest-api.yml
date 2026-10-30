@@ -1,0 +1,53 @@
+name: Pull API sources
+
+# Pulls World Bank (WDI + WGI) and UN SDG indicators and loads each as a tracked source_run.
+# Runs monthly, on demand, and whenever the pull scripts change.
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 2 3 * *"     # 03rd of each month, 02:17 UTC
+  push:
+    branches: [main]
+    paths:
+      - "ingest/pull_*.py"
+      - "ingest/sync_countries.py"
+      - ".github/workflows/ingest-api.yml"
+
+jobs:
+  pull:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - run: pip install -r ingest/requirements.txt
+
+      - name: Register countries
+        run: python ingest/sync_countries.py
+
+      - name: World Bank - pull
+        run: python ingest/pull_worldbank.py out/worldbank.csv
+      - name: World Bank - load
+        run: >
+          python ingest/load_long_csv.py out/worldbank.csv --drop-unknown-units
+          --source "World Bank API (WDI + WGI)" --script-version "pull_worldbank.py@${GITHUB_SHA::7}"
+          --source-version "$(date -u +%Y-%m-%d)"
+
+      - name: UN SDG - pull
+        run: python ingest/pull_sdg.py out/sdg.csv
+      - name: UN SDG - load
+        run: >
+          python ingest/load_long_csv.py out/sdg.csv --drop-unknown-units
+          --source "UN SDG Global Database API" --script-version "pull_sdg.py@${GITHUB_SHA::7}"
+          --source-version "$(date -u +%Y-%m-%d)"
+
+      - name: Keep the pulled files
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-pull-${{ github.run_id }}
+          path: out/
+          if-no-files-found: ignore

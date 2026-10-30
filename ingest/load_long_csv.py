@@ -51,6 +51,8 @@ def main():
     ap.add_argument("--storage-path", help="path of the raw file in Supabase Storage, if uploaded")
     ap.add_argument("--synthetic", action="store_true", help="mark the run as dummy data")
     ap.add_argument("--notes")
+    ap.add_argument("--drop-unknown-units", action="store_true",
+                    help="skip rows for units not in spatial_unit instead of failing")
     ap.add_argument("--dry-run", action="store_true")
     a = ap.parse_args()
 
@@ -68,6 +70,10 @@ def main():
         cur.execute("select code from indicator"); known_i = {r[0] for r in cur.fetchall()}
         cur.execute("select unit_id from spatial_unit"); known_u = {r[0] for r in cur.fetchall()}
         bad_i = set(codes) - known_i; bad_u = set(df.unit_id) - known_u
+        if bad_u and a.drop_unknown_units:
+            print(f"dropping {df.unit_id.isin(bad_u).sum()} rows for {len(bad_u)} unknown units: {sorted(bad_u)[:15]}")
+            df = df[~df.unit_id.isin(bad_u)]
+            bad_u = set()
         if bad_i or bad_u:
             sys.exit(f"unknown indicator codes {sorted(bad_i)} / unit ids {sorted(bad_u)[:10]}")
 

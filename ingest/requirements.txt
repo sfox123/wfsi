@@ -1,2 +1,4 @@
 pandas>=2.2
 psycopg[binary]>=3.2
+pycountry>=24.6
+requests>=2.32
