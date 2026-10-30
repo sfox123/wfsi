@@ -17,7 +17,7 @@ import pandas as pd, pycountry, requests
 API = "https://unstats.un.org/sdgapi/v1/sdg/Series/Data"
 SERIES = {"D3": "ER_H2O_WUEYST", "D4": "ER_H2O_IWRMD", "D5": "EG_TBA_H2CO", "D8": "EN_WWT_WWDS",
           "E5": "ER_WAT_PART", "X1": "ER_H2O_STRESS", "X2": "VC_DSR_DAFF"}
-TOTALS = {"_T", "ALL", "ALLAREA", "ALLSECT", "_Z", "G", "BOTHSEX"}
+TOTALS = {"_T", "TOTAL", "ALL", "ALLAREA", "ALLSECT", "_Z", "G", "BOTHSEX"}
 
 
 def m49_to_iso3(code):
