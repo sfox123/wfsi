@@ -1,0 +1,495 @@
+<title>WSFI Formula Mockup</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&family=Hanken+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: follows the WSFI story-mode design (navy band, serif headline, orange accent).
+   Formula steps first, then weights, then the map with a worked calculation beside it, then the data register. */
+:root {
+  --bg: #eef2f6; --surface: #ffffff; --ink: #14263d; --muted: #586a7c; --line: #d3dce6;
+  --navy: #2c5680; --on-navy: #ffffff; --accent: #d9541e; --teal: #1f7f8c;
+  --c1: #d5dde6; --c2: #f0d48a; --c3: #e0960f; --c4: #e7632c; --c5: #a3381a;
+  --nodata: #f6f8fa; --stroke: #ffffff;
+  --real: #1f7a4d; --real-bg: #dff1e6; --stand: #94600a; --stand-bg: #f9ecd2; --est: #5d4a8a; --est-bg: #e9e4f5;
+  --font-display: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --font-body: "Hanken Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1a26; --surface: #172535; --ink: #e6edf4; --muted: #96a7b8; --line: #2b3d51;
+    --navy: #1d3b5a; --on-navy: #ffffff; --accent: #f08350; --teal: #5cc0cc;
+    --c1: #c9d3de; --c2: #f0d48a; --c3: #e0960f; --c4: #e7632c; --c5: #a3381a;
+    --nodata: #1d2c3d; --stroke: #0f1a26;
+    --real: #76cfa0; --real-bg: #17362a; --stand: #e6b45a; --stand-bg: #3a2d12; --est: #b9a8e6; --est-bg: #2a2440;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1a26; --surface: #172535; --ink: #e6edf4; --muted: #96a7b8; --line: #2b3d51;
+  --navy: #1d3b5a; --on-navy: #ffffff; --accent: #f08350; --teal: #5cc0cc;
+  --c1: #c9d3de; --c2: #f0d48a; --c3: #e0960f; --c4: #e7632c; --c5: #a3381a;
+  --nodata: #1d2c3d; --stroke: #0f1a26;
+  --real: #76cfa0; --real-bg: #17362a; --stand: #e6b45a; --stand-bg: #3a2d12; --est: #b9a8e6; --est-bg: #2a2440;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.5; }
+.band { background: var(--navy); color: var(--on-navy); }
+.band .inner, main { max-width: 1180px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.band .inner { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding-block: 12px; }
+.brand { font-family: var(--font-display); font-weight: 700; font-size: 20px; letter-spacing: .01em; }
+.brand small { font: 500 11px var(--font-body); letter-spacing: .14em; text-transform: uppercase; opacity: .8; margin-left: 10px; }
+.band .right { margin-left: auto; display: flex; flex-wrap: wrap; align-items: center; gap: 10px; font-size: 13px; }
+.mode { display: inline-flex; align-items: center; gap: 7px; font: 500 12px var(--font-mono); padding: 3px 10px; border-radius: 999px; background: rgba(255,255,255,.14); }
+.mode::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: #c9d3de; }
+.mode[data-mode="live"]::before { background: #7be0a8; }
+main { padding-block: 32px 64px; display: grid; gap: 36px; }
+h1, h2, h3 { font-family: var(--font-display); margin: 0; text-wrap: balance; }
+h1 { font-size: clamp(30px, 4.6vw, 46px); line-height: 1.08; font-weight: 700; }
+h2 { font-size: 24px; font-weight: 600; }
+h3 { font-size: 17px; font-weight: 600; }
+p { margin: 0; }
+.eyebrow { font: 600 12px var(--font-body); letter-spacing: .14em; text-transform: uppercase; color: var(--accent); display: flex; align-items: center; gap: 10px; }
+.eyebrow::before { content: ""; width: 28px; height: 2px; background: var(--accent); }
+.lede { color: var(--muted); max-width: 70ch; font-size: 17px; }
+.intro { display: grid; gap: 14px; }
+.notice { border: 1px solid var(--line); border-left: 4px solid var(--accent); background: var(--surface); border-radius: 8px; padding: 12px 16px; font-size: 14px; max-width: 86ch; }
+.sect { display: grid; gap: 16px; }
+.sect-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: 10px 16px; }
+.sub { color: var(--muted); font-size: 14px; max-width: 78ch; }
+.num, .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+/* formula steps */
+.steps { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; counter-reset: step; }
+.step { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px; display: grid; gap: 8px; align-content: start; min-width: 0; }
+.step::before { counter-increment: step; content: "Step " counter(step); font: 500 11px var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--teal); }
+.step p { font-size: 13px; color: var(--muted); }
+.fx { font-family: var(--font-mono); font-size: 12.5px; background: var(--bg); border-radius: 6px; padding: 8px 10px; overflow-wrap: anywhere; }
+.fx sup { font-size: .75em; }
+.why { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.why div { border-top: 2px solid var(--teal); padding-top: 10px; font-size: 14px; }
+.why b { display: block; font-family: var(--font-display); font-size: 16px; margin-bottom: 2px; }
+
+/* controls */
+.controls { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) auto; gap: 16px 24px; align-items: end; }
+.ctl { display: grid; gap: 6px; min-width: 0; }
+.ctl label { font-size: 13px; font-weight: 600; }
+.ctl output { font: 500 13px var(--font-mono); color: var(--teal); }
+.ctl input[type=range] { width: 100%; accent-color: var(--accent); }
+button, select { font: 500 13px var(--font-body); color: var(--ink); }
+.btn { background: transparent; border: 1px solid var(--line); border-radius: 999px; padding: 7px 14px; cursor: pointer; }
+.btn:hover { border-color: var(--accent); color: var(--accent); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* map */
+.mapgrid { display: grid; grid-template-columns: minmax(0, 1fr) 372px; gap: 16px; align-items: start; }
+.mapcard, .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; min-width: 0; }
+.mapcard { padding: 12px; display: grid; gap: 10px; position: relative; }
+.toolbar { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; justify-content: space-between; }
+.views { display: flex; flex-wrap: wrap; gap: 4px; }
+.views button { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 4px 11px; cursor: pointer; font-size: 12px; }
+.views button[aria-pressed="true"] { background: var(--navy); border-color: var(--navy); color: var(--on-navy); }
+select { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; max-width: 100%; }
+svg.map { width: 100%; height: auto; display: block; }
+.map path, .map circle { stroke: var(--stroke); stroke-width: .5; cursor: pointer; }
+.map .nd { fill: url(#hatch); cursor: default; }
+.map .sel { stroke: var(--ink); stroke-width: 1.6; }
+.map circle { stroke: var(--ink); stroke-width: .4; }
+.tip { position: absolute; pointer-events: none; background: var(--ink); color: var(--bg); font-size: 12px; padding: 5px 9px; border-radius: 6px; white-space: nowrap; transform: translate(-50%, -130%); z-index: 2; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12px; color: var(--muted); align-items: center; }
+.legend .ttl { font: 600 11px var(--font-body); letter-spacing: .1em; text-transform: uppercase; color: var(--ink); width: 100%; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 22px; height: 10px; border-radius: 2px; display: inline-block; border: 1px solid var(--line); }
+.legend i.h { background: repeating-linear-gradient(45deg, var(--nodata), var(--nodata) 3px, var(--line) 3px, var(--line) 4px); }
+.cover { font-size: 12px; color: var(--muted); }
+
+/* country panel */
+.panel { padding: 16px; display: grid; gap: 14px; }
+.panel .top { display: flex; justify-content: space-between; gap: 12px; align-items: start; }
+.score { text-align: right; }
+.score .big { font: 700 44px/1 var(--font-display); color: var(--accent); }
+.score .cls { font-size: 12px; color: var(--muted); }
+.pills { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+.pill { border: 1px solid var(--line); border-radius: 8px; padding: 6px 4px; text-align: center; }
+.pill b { display: block; font: 500 11px var(--font-mono); color: var(--teal); }
+.pill span { font: 500 15px var(--font-mono); }
+.calc { display: grid; gap: 4px; font-family: var(--font-mono); font-size: 12.5px; background: var(--bg); border-radius: 8px; padding: 10px 12px; overflow-x: auto; }
+.calc div { white-space: nowrap; display: flex; justify-content: space-between; gap: 12px; }
+.calc div span:first-child { color: var(--muted); }
+.calc .res { border-top: 1px solid var(--line); padding-top: 6px; margin-top: 2px; font-weight: 500; }
+.whatif { font-size: 13px; border-left: 3px solid var(--real); padding-left: 10px; }
+.tablewrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { text-align: left; font: 500 11px var(--font-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); padding: 8px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+td { padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+tr:last-child td { border-bottom: 0; }
+.panel table { font-size: 12.5px; }
+.panel td, .panel th { padding: 6px 6px; }
+td.r, th.r { text-align: right; }
+.chip { display: inline-block; font: 600 10.5px var(--font-body); letter-spacing: .04em; padding: 2px 7px; border-radius: 4px; white-space: nowrap; }
+.chip.real { background: var(--real-bg); color: var(--real); }
+.chip.standin { background: var(--stand-bg); color: var(--stand); }
+.chip.estimate { background: var(--est-bg); color: var(--est); }
+.dim { color: var(--muted); }
+tr.grp td { background: var(--bg); font-size: 13px; }
+tr.grp b { font-family: var(--font-display); font-size: 15px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
+.ranks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.ranks .card { padding: 14px 16px; display: grid; gap: 8px; }
+.ranks ol { margin: 0; padding: 0; list-style: none; display: grid; gap: 2px; }
+.ranks li button { width: 100%; display: flex; justify-content: space-between; gap: 10px; background: none; border: 0; padding: 4px 6px; border-radius: 6px; cursor: pointer; text-align: left; font-size: 13.5px; }
+.ranks li button:hover { background: var(--bg); }
+footer { font-size: 12px; color: var(--muted); display: grid; gap: 4px; }
+footer a { color: var(--teal); }
+
+@media (max-width: 980px) {
+  .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .mapgrid { grid-template-columns: minmax(0, 1fr); }
+  .controls { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 640px) {
+  .steps, .why, .ranks { grid-template-columns: minmax(0, 1fr); }
+}
+</style>
+
+<div class="band"><div class="inner">
+  <span class="brand">WSFI<small>Formula mockup</small></span>
+  <div class="right"><span class="mode" id="mode" data-mode="snapshot">Snapshot</span><span id="asof"></span></div>
+</div></div>
+
+<main>
+  <section class="intro">
+    <span class="eyebrow">Water Security Futures Index · proposal for discussion</span>
+    <h1>One formula, worked on real data</h1>
+    <p class="lede">A proposed way to turn the five pillars into one score per country. The score runs from 0 (prepared) to 100 (least prepared), and 50 is the point where risk equals readiness.</p>
+    <p class="notice"><b>This is a mockup.</b> Every number on the map is computed from real data in the WSFI database, but pillars A and C do not have their own indicators yet. A uses two stand-in measures of today's water pressure and C is an estimate. The table further down shows what is real and what is illustrative.</p>
+  </section>
+
+  <section class="sect" aria-labelledby="fx-h">
+    <h2 id="fx-h">The proposed formula</h2>
+    <div class="steps">
+      <div class="step"><h3>Scale each data point</h3><div class="fx">x → 0 … 1</div><p>Fixed limits per data point, so a country's score does not move when other countries change.</p></div>
+      <div class="step"><h3>Average into pillars</h3><div class="fx">A, B, C, D, E = mean</div><p>Each pillar is the average of its available data points. Higher A and B mean more risk. Higher C, D and E mean more readiness.</p></div>
+      <div class="step"><h3>Build the two sides</h3><div class="fx" id="fx-sides"></div><p>Weights are powers, so one very weak pillar cannot be hidden by a strong one.</p></div>
+      <div class="step"><h3>Discount for equity</h3><div class="fx" id="fx-eq"></div><p>Readiness that does not reach everyone counts for less. E never adds readiness; it only keeps or cuts it.</p></div>
+      <div class="step"><h3>Score 0 to 100</h3><div class="fx">WSFI = 100 × Risk ÷ (Risk + Ready)</div><p>The same as gap ÷ (1 + gap), where gap = Risk ÷ Ready.</p></div>
+    </div>
+    <div class="why">
+      <div><b>50 has a meaning</b>Risk equals effective readiness. Above 50, risk is ahead, which matches the design's "priority country" line.</div>
+      <div><b>No league-table effect</b>The score is bounded by its own formula, not by the best and worst country in the sample.</div>
+      <div><b>Weights that add up</b>A and B share the risk side (60/40), C and D share the readiness side (60/40), keeping the framework's 30/20/30/20 proportions.</div>
+    </div>
+  </section>
+
+  <section class="sect" aria-labelledby="w-h">
+    <div class="sect-head"><h2 id="w-h">Try the weights</h2><span class="sub">The map, the ranking and the worked example all update.</span></div>
+    <div class="controls">
+      <div class="ctl"><label for="w-a">Share of A within risk</label><input type="range" id="w-a" min="0.3" max="0.8" step="0.05" value="0.6"><output id="o-a"></output></div>
+      <div class="ctl"><label for="w-c">Share of C within readiness</label><input type="range" id="w-c" min="0.3" max="0.8" step="0.05" value="0.6"><output id="o-c"></output></div>
+      <div class="ctl"><label for="w-l">Strength of the equity discount</label><input type="range" id="w-l" min="0" max="1" step="0.05" value="0.5"><output id="o-l"></output></div>
+      <button class="btn" id="reset" type="button">Reset</button>
+    </div>
+  </section>
+
+  <section class="sect" aria-labelledby="map-h">
+    <div class="sect-head"><h2 id="map-h">The map</h2><span class="cover" id="cover"></span></div>
+    <div class="mapgrid">
+      <div class="mapcard" id="mapcard">
+        <div class="toolbar">
+          <div class="views" id="views" role="group" aria-label="What the map shows"></div>
+          <label class="dim" style="font-size:12px">Country <select id="pick"></select></label>
+        </div>
+        <svg class="map" id="map" role="img" aria-label="World map coloured by the selected measure"></svg>
+        <div class="tip" id="tip" hidden></div>
+        <div class="legend" id="legend"></div>
+      </div>
+      <aside class="panel" id="panel" aria-live="polite"></aside>
+    </div>
+  </section>
+
+  <section class="sect" aria-labelledby="rank-h">
+    <h2 id="rank-h">Both ends of the ranking</h2>
+    <div class="ranks">
+      <div class="card"><h3>Most prepared</h3><ol id="top"></ol></div>
+      <div class="card"><h3>Highest priority</h3><ol id="bottom"></ol></div>
+    </div>
+  </section>
+
+  <section class="sect" aria-labelledby="data-h">
+    <div class="sect-head"><h2 id="data-h">What is real and what is illustrative</h2>
+      <span class="legend" style="width:auto"><span><span class="chip real">Framework indicator</span> real data, the indicator the framework asks for</span><span><span class="chip standin">Stand-in</span> real data, but not the final indicator</span><span><span class="chip estimate">Estimate</span> modelled so the map can be drawn</span></span></div>
+    <div class="card tablewrap"><table>
+      <thead><tr><th>Data point</th><th>Type</th><th>How it is scaled to 0–1</th><th>Source</th><th class="r">Countries</th></tr></thead>
+      <tbody id="reg"></tbody>
+    </table></div>
+    <p class="sub" id="rule"></p>
+  </section>
+
+  <footer>
+    <span>Formula and limits are proposals for discussion. Scores will change when the framework's own indicators replace the stand-ins and the estimate.</span>
+    <span>Data: World Bank API and UN SDG Global Database, read from the WSFI database. Map shapes: Natural Earth. Boundaries are for display only.</span>
+  </footer>
+</main>
+
+<script>
+const MAP = /*__MAP__*/null;
+const SNAPSHOT = /*__SNAP__*/null;
+const SUPABASE_URL = "https://xdbrtdcrhqabckirhssu.supabase.co";
+const SUPABASE_KEY = "sb_publishable_3M1mEDnK1mNPE6uicQrs_Q_QP5bhUqU";
+
+const clip = x => Math.max(0, Math.min(1, x));
+const lin = (lo, hi) => v => clip((v - lo) / (hi - lo));
+const logs = (lo, hi) => v => clip((Math.log(Math.max(v, 1e-9)) - Math.log(lo)) / (Math.log(hi) - Math.log(lo)));
+const inv = f => v => 1 - f(v);
+const FLOOR = 0.05;
+
+// Every data point the mockup uses. type: real = framework indicator, standin = real data but not the final indicator, estimate = modelled.
+const INPUTS = [
+  { key: "X1", pillar: "A", label: "Water stress today (SDG 6.4.2)", unit: "%", type: "standin", f: logs(1, 100), how: "Log scale: 1% → 0, 100% or more → 1", src: "UN SDG database" },
+  { key: "X6", pillar: "A", label: "Renewable freshwater per person", unit: "m³", type: "standin", f: inv(logs(500, 20000)), how: "Log scale, reversed: 500 m³ or less → 1, 20,000 m³ → 0", src: "World Bank" },
+  { key: "B6", pillar: "B", label: "Agriculture share of GDP", unit: "%", type: "real", f: lin(0, 35), how: "0% → 0, 35% or more → 1", src: "World Bank" },
+  { key: "X2", pillar: "B", label: "People affected by disasters, average since 2015", unit: "per 100,000", type: "standin", f: logs(1, 10000), how: "Log scale: 1 → 0, 10,000 or more → 1", src: "UN SDG database" },
+  { key: "GOV", pillar: "C", label: "Governance score (borrowed from D)", unit: "", type: "estimate", f: lin(-2, 2), how: "−2 → 0, +2 → 1", src: "World Bank WGI" },
+  { key: "GDPPC", pillar: "C", label: "GDP per person", unit: "US$", type: "estimate", f: logs(500, 60000), how: "Log scale: US$500 → 0, US$60,000 → 1", src: "World Bank" },
+  { key: "D3", pillar: "D", label: "Water-use efficiency (SDG 6.4.1)", unit: "US$/m³", type: "real", f: logs(1, 300), how: "Log scale: US$1 → 0, US$300 → 1", src: "UN SDG database" },
+  { key: "D4", pillar: "D", label: "IWRM implementation (SDG 6.5.1)", unit: "of 100", type: "real", f: lin(0, 100), how: "0 → 0, 100 → 1", src: "UN SDG database" },
+  { key: "D5", pillar: "D", label: "Transboundary cooperation (SDG 6.5.2)", unit: "%", type: "real", f: lin(0, 100), how: "0% → 0, 100% → 1. Left out where a country has no shared waters", src: "UN SDG database" },
+  { key: "D6", pillar: "D", label: "Governance (mean of four WGI scores)", unit: "", type: "real", f: lin(-2, 2), how: "−2 → 0, +2 → 1", src: "World Bank WGI" },
+  { key: "D8", pillar: "D", label: "Wastewater safely treated (SDG 6.3.1)", unit: "%", type: "real", f: lin(0, 100), how: "0% → 0, 100% → 1", src: "UN SDG database" },
+  { key: "E5", pillar: "E", label: "Participation in water governance (SDG 6.b.1)", unit: "of 3", type: "real", f: lin(0, 3), how: "0 → 0, 3 → 1", src: "UN SDG database" }
+];
+const PILLARS = {
+  A: { name: "Future hydro-climatic pressure", total: 8, note: "0 of 8 framework indicators yet. Two stand-ins describe today's pressure, with no 2030–2080 projections.", need: "Aqueduct projections and the Earth Engine jobs (soil moisture, groundwater, whiplash, sea level)." },
+  B: { name: "Exposure, demand and stability", total: 8, note: "1 of 8 framework indicators, plus one stand-in.", need: "Population and GDP in stressed basins, future withdrawals, conflict and displacement data." },
+  C: { name: "Anticipatory capacity", total: 7, note: "0 of 7 framework indicators yet. Estimated from governance and income.", need: "Early-warning scores, forecast skill, anticipatory-action frameworks and the expert scoring." },
+  D: { name: "Adaptive capacity and governance", total: 8, note: "5 of 8 framework indicators, all real.", need: "Dam storage, source mix and ND-GAIN readiness." },
+  E: { name: "Equity and inclusion", total: 6, note: "1 of 6 framework indicators. Where it is missing, the middle value of all countries is used.", need: "Water and sanitation access gaps, gender parity, investment targeting and affordability." }
+};
+const CLASSES = [
+  { max: 30, name: "Well prepared", c: "--c1" }, { max: 40, name: "Prepared", c: "--c2" }, { max: 50, name: "Narrow margin", c: "--c3" },
+  { max: 65, name: "Priority", c: "--c4" }, { max: 101, name: "High priority", c: "--c5" }
+];
+const VIEWS = [
+  { k: "S", name: "WSFI score" }, { k: "R", name: "Risk" }, { k: "Pe", name: "Readiness" },
+  { k: "A", name: "A" }, { k: "B", name: "B" }, { k: "C", name: "C" }, { k: "D", name: "D" }, { k: "E", name: "E" }
+];
+const DEFAULTS = { wa: 0.6, wc: 0.6, lam: 0.5 };
+let P = { ...DEFAULTS }, data = SNAPSHOT, view = "S", selected = "LKA", results = {}, ranked = [], eMedian = 2 / 3;
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const f2 = x => x.toFixed(2);
+const mean = a => a.reduce((s, x) => s + x, 0) / a.length;
+function fmtRaw(v, unit) {
+  const a = Math.abs(v);
+  let s = a >= 1000 ? Math.round(v).toLocaleString() : a >= 100 ? v.toFixed(0) : a >= 10 ? v.toFixed(1) : v.toFixed(2);
+  if (unit === "US$") return "US$" + s;
+  if (unit === "US$/m³") return "US$" + s + "/m³";
+  return s + (unit === "%" ? "%" : unit ? " " + unit : "");
+}
+
+// Raw values for one country, including the two derived ones used by the C estimate.
+function rawOf(c) {
+  const v = c.v || {}, out = {};
+  for (const k in v) out[k] = { v: v[k][0], y: v[k][1] };
+  if (out.D6) out.GOV = { ...out.D6 };
+  if (out.X5 && out.X4 && out.X4.v > 0) out.GDPPC = { v: out.X5.v / out.X4.v, y: Math.min(out.X5.y, out.X4.y) };
+  return out;
+}
+function pillarsOf(c) {
+  const raw = rawOf(c), parts = {}, pil = {}, n = {};
+  for (const inp of INPUTS) {
+    if (!(inp.key in raw)) continue;
+    parts[inp.key] = { raw: raw[inp.key].v, year: raw[inp.key].y, s: inp.f(raw[inp.key].v) };
+  }
+  for (const p of "ABCDE") {
+    const xs = INPUTS.filter(i => i.pillar === p && parts[i.key]).map(i => parts[i.key].s);
+    n[p] = xs.length; pil[p] = xs.length ? mean(xs) : null;
+  }
+  return { parts, pil, n };
+}
+function score(pil, eMissing, p) {
+  const fl = x => Math.max(x, FLOOR);
+  const E = eMissing ? eMedian : pil.E;
+  const R = Math.pow(fl(pil.A), p.wa) * Math.pow(fl(pil.B), 1 - p.wa);
+  const Pr = Math.pow(fl(pil.C), p.wc) * Math.pow(fl(pil.D), 1 - p.wc);
+  const F = 1 - p.lam * (1 - E);
+  const Pe = Pr * F;
+  return { E, R, Pr, F, Pe, G: R / Pe, S: 100 * R / (R + Pe) };
+}
+function computeAll() {
+  const base = data.countries.map(c => ({ c, ...pillarsOf(c) }));
+  const es = base.filter(b => b.pil.E !== null).map(b => b.pil.E).sort((a, b) => a - b);
+  eMedian = es.length ? es[Math.floor(es.length / 2)] : 2 / 3;
+  results = {};
+  for (const b of base) {
+    const ok = b.n.A >= 1 && b.n.B >= 1 && b.n.C >= 1 && b.n.D >= 2;
+    const eMissing = b.pil.E === null;
+    results[b.c.id] = { id: b.c.id, name: b.c.name, parts: b.parts, pil: b.pil, n: b.n, ok, eMissing, ...(ok ? score(b.pil, eMissing, P) : {}) };
+  }
+  ranked = Object.values(results).filter(r => r.ok).sort((a, b) => a.S - b.S);
+  ranked.forEach((r, i) => { r.rank = i + 1; });
+}
+const classOf = s => CLASSES.find(c => s < c.max);
+
+// ---- map ----
+function buildMap() {
+  const svg = $("map");
+  svg.setAttribute("viewBox", `0 0 ${MAP.w} ${MAP.h}`);
+  let h = `<defs><pattern id="hatch" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="4" height="4" fill="var(--nodata)"/><line x1="0" y1="0" x2="0" y2="4" stroke="var(--line)" stroke-width="1.2"/></pattern></defs>`;
+  for (const e of MAP.extras) h += `<path class="nd" d="${e.d}"/>`;
+  for (const id in MAP.paths) h += `<path data-id="${id}" d="${MAP.paths[id]}"/>`;
+  for (const id in MAP.dots) if (results[id]) h += `<circle data-id="${id}" cx="${MAP.dots[id][0]}" cy="${MAP.dots[id][1]}" r="3.2"/>`;
+  svg.innerHTML = h;
+  if (svg.dataset.wired) return;
+  svg.dataset.wired = "1";
+  const tip = $("tip"), card = $("mapcard");
+  svg.addEventListener("pointermove", e => {
+    const id = e.target.dataset && e.target.dataset.id, r = id && results[id];
+    if (!r) { tip.hidden = true; return; }
+    const b = card.getBoundingClientRect();
+    tip.style.left = (e.clientX - b.left) + "px"; tip.style.top = (e.clientY - b.top) + "px";
+    tip.textContent = r.ok ? `${r.name} · ${viewText(r)}` : `${r.name} · not enough data`;
+    tip.hidden = false;
+  });
+  svg.addEventListener("pointerleave", () => { tip.hidden = true; });
+  svg.addEventListener("click", e => { const id = e.target.dataset && e.target.dataset.id; if (id && results[id]) select(id); });
+}
+function viewValue(r) { return view === "S" ? r.S : view === "R" ? r.R : view === "Pe" ? r.Pe : view === "E" ? r.E : r.pil[view]; }
+function viewText(r) { const v = viewValue(r); return view === "S" ? `WSFI ${Math.round(v)}` : `${VIEWS.find(x => x.k === view).name} ${f2(v)}`; }
+// Darker always means worse: risk-type values as they are, readiness-type values reversed.
+const worseIsHigh = () => ["S", "R", "A", "B"].includes(view);
+function colourFor(r) {
+  if (!r || !r.ok) return null;
+  const v = viewValue(r);
+  if (view === "S") return `var(${classOf(v).c})`;
+  const bad = worseIsHigh() ? v : 1 - v;
+  return `var(--c${Math.min(5, Math.floor(clip(bad) * 5) + 1)})`;
+}
+function paintMap() {
+  document.querySelectorAll("#map [data-id]").forEach(el => {
+    const r = results[el.dataset.id], col = colourFor(r);
+    el.classList.toggle("nd", !col);
+    el.style.fill = col || "";
+    el.classList.toggle("sel", el.dataset.id === selected);
+  });
+  const sel = document.querySelector("#map .sel"); if (sel) sel.parentNode.appendChild(sel);
+  let lg;
+  if (view === "S") {
+    lg = `<span class="ttl">WSFI score · 0 prepared, 100 least prepared</span>` + CLASSES.map((c, i) =>
+      `<span><i style="background:var(${c.c})"></i>${i ? CLASSES[i - 1].max : 0}–${c.max > 100 ? 100 : c.max} ${c.name}</span>`).join("");
+  } else {
+    const nm = VIEWS.find(x => x.k === view).name, full = PILLARS[view] ? `${nm} · ${PILLARS[view].name}` : nm;
+    const hi = worseIsHigh();
+    lg = `<span class="ttl">${esc(full)} · 0 to 1, darker is worse</span>` + [0, 1, 2, 3, 4].map(i => {
+      const lo = hi ? i * .2 : 1 - (i + 1) * .2, up = lo + .2;
+      return `<span><i style="background:var(--c${i + 1})"></i>${lo.toFixed(1)}–${up.toFixed(1)}</span>`;
+    }).join("");
+  }
+  $("legend").innerHTML = lg + `<span><i class="h"></i>Not enough data</span>`;
+}
+
+// ---- country panel ----
+function select(id) { selected = id; $("pick").value = id; paintMap(); renderPanel(); }
+function renderPanel() {
+  const r = results[selected]; if (!r) { $("panel").innerHTML = ""; return; }
+  const rows = INPUTS.map(i => {
+    const p = r.parts[i.key];
+    return `<tr><td>${i.pillar} · ${esc(i.label)}<br><span class="chip ${i.type}">${i.type === "real" ? "Framework indicator" : i.type === "standin" ? "Stand-in" : "Estimate"}</span></td>
+      <td class="r num">${p ? `${fmtRaw(p.raw, i.unit)}<br><span class="dim">${p.year}</span>` : `<span class="dim">no data</span>`}</td>
+      <td class="r num">${p ? f2(p.s) : "–"}</td></tr>`;
+  }).join("");
+  const inputs = `<div class="tablewrap"><table><thead><tr><th>Data point</th><th class="r">Value</th><th class="r">Scaled</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  if (!r.ok) {
+    $("panel").innerHTML = `<div class="top"><div><h3>${esc(r.name)}</h3><span class="dim">Not scored</span></div></div>
+      <p class="sub">Not enough data yet. A country needs at least one data point each for A, B and C, and two for D.</p>${inputs}`;
+    return;
+  }
+  const cls = classOf(r.S), pv = k => k === "E" ? r.E : r.pil[k];
+  const up = { ...r.pil, D: Math.min(1, r.pil.D + .1), E: Math.min(1, r.E + .1) };
+  const alt = score(up, false, P);
+  $("panel").innerHTML = `
+    <div class="top"><div><h3>${esc(r.name)}</h3><span class="dim">Rank ${r.rank} of ${ranked.length} · 1 is most prepared</span></div>
+      <div class="score"><div class="big">${Math.round(r.S)}</div><div class="cls">${cls.name}</div></div></div>
+    <div class="pills">${"ABCDE".split("").map(k => `<div class="pill"><b>${k}</b><span>${f2(pv(k))}</span></div>`).join("")}</div>
+    ${r.eMissing ? `<p class="sub">No equity data for this country, so the middle value of all countries (${f2(eMedian)}) is used for E.</p>` : ""}
+    <div class="calc">
+      <div><span>Risk = A<sup>${P.wa.toFixed(2)}</sup> × B<sup>${(1 - P.wa).toFixed(2)}</sup></span><span>${f2(r.R)}</span></div>
+      <div><span>Readiness = C<sup>${P.wc.toFixed(2)}</sup> × D<sup>${(1 - P.wc).toFixed(2)}</sup></span><span>${f2(r.Pr)}</span></div>
+      <div><span>Equity factor = 1 − ${P.lam.toFixed(2)} × (1 − ${f2(r.E)})</span><span>${f2(r.F)}</span></div>
+      <div><span>Ready = ${f2(r.Pr)} × ${f2(r.F)}</span><span>${f2(r.Pe)}</span></div>
+      <div><span>Gap = ${f2(r.R)} ÷ ${f2(r.Pe)}</span><span>${f2(r.G)}</span></div>
+      <div class="res"><span>WSFI = 100 × ${f2(r.R)} ÷ (${f2(r.R)} + ${f2(r.Pe)})</span><span>${r.S.toFixed(1)}</span></div>
+    </div>
+    <p class="whatif"><b>Raise readiness.</b> Lifting D and E by 0.10 each would move the score from ${Math.round(r.S)} to ${Math.round(alt.S)}.</p>
+    ${inputs}`;
+}
+
+// ---- static sections ----
+function renderFormula() {
+  $("fx-sides").innerHTML = `Risk = A<sup>${P.wa.toFixed(2)}</sup> × B<sup>${(1 - P.wa).toFixed(2)}</sup><br>Readiness = C<sup>${P.wc.toFixed(2)}</sup> × D<sup>${(1 - P.wc).toFixed(2)}</sup>`;
+  $("fx-eq").innerHTML = `Ready = Readiness × (1 − ${P.lam.toFixed(2)} × (1 − E))`;
+  $("o-a").textContent = `${Math.round(P.wa * 100)}% A · ${Math.round((1 - P.wa) * 100)}% B`;
+  $("o-c").textContent = `${Math.round(P.wc * 100)}% C · ${Math.round((1 - P.wc) * 100)}% D`;
+  $("o-l").textContent = P.lam === 0 ? "Off: equity is ignored" : `Low equity can cut readiness by up to ${Math.round(P.lam * 100)}%`;
+}
+function renderLists() {
+  const li = r => `<li><button type="button" data-id="${r.id}"><span>${r.rank}. ${esc(r.name)}</span><span class="num">${Math.round(r.S)}</span></button></li>`;
+  $("top").innerHTML = ranked.slice(0, 10).map(li).join("");
+  $("bottom").innerHTML = ranked.slice(-10).reverse().map(li).join("");
+  $("cover").textContent = `${ranked.length} of ${data.countries.length} countries and territories scored`;
+}
+function renderRegister() {
+  const all = Object.values(results);
+  let h = "";
+  for (const p of "ABCDE") {
+    h += `<tr class="grp"><td colspan="5"><b>${p} · ${esc(PILLARS[p].name)}</b><br>${esc(PILLARS[p].note)} <span class="dim">Still needed: ${esc(PILLARS[p].need)}</span></td></tr>`;
+    for (const i of INPUTS.filter(x => x.pillar === p)) {
+      h += `<tr><td>${esc(i.label)}</td><td><span class="chip ${i.type}">${i.type === "real" ? "Framework indicator" : i.type === "standin" ? "Stand-in" : "Estimate"}</span></td>
+        <td>${esc(i.how)}</td><td>${esc(i.src)}</td><td class="r num">${all.filter(r => r.parts[i.key]).length}</td></tr>`;
+    }
+  }
+  $("reg").innerHTML = h;
+  $("rule").textContent = `A country is scored when A, B and C each have at least one data point and D has at least two. Pillar scores below ${FLOOR} are raised to ${FLOOR}, so a zero cannot break the division. Each value is the latest year available.`;
+}
+function renderPick() {
+  const list = Object.values(results).sort((a, b) => a.name.localeCompare(b.name));
+  $("pick").innerHTML = list.map(r => `<option value="${r.id}">${esc(r.name)}${r.ok ? "" : " (not scored)"}</option>`).join("");
+  $("pick").value = selected;
+}
+function renderViews() {
+  $("views").innerHTML = VIEWS.map(v => `<button type="button" id="v-${v.k}" data-k="${v.k}" aria-pressed="${v.k === view}">${v.name}</button>`).join("");
+}
+function recompute() { computeAll(); renderFormula(); renderLists(); paintMap(); renderPanel(); }
+function setMode(mode) {
+  $("mode").dataset.mode = mode; $("mode").textContent = mode === "live" ? "Live" : "Snapshot";
+  const d = new Date(data.as_of);
+  $("asof").textContent = (mode === "live" ? "Read from the database " : "Data as of ") + d.toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+}
+
+// ---- events ----
+[["w-a", "wa"], ["w-c", "wc"], ["w-l", "lam"]].forEach(([id, k]) => $(id).addEventListener("input", e => { P[k] = +e.target.value; recompute(); }));
+$("reset").addEventListener("click", () => { P = { ...DEFAULTS }; $("w-a").value = P.wa; $("w-c").value = P.wc; $("w-l").value = P.lam; recompute(); });
+$("views").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; view = b.dataset.k;
+  document.querySelectorAll("#views button").forEach(x => x.setAttribute("aria-pressed", x.dataset.k === view)); paintMap(); });
+$("pick").addEventListener("change", e => select(e.target.value));
+document.querySelector(".ranks").addEventListener("click", e => { const b = e.target.closest("button[data-id]"); if (b) { select(b.dataset.id); $("map-h").scrollIntoView({ behavior: "smooth", block: "start" }); } });
+
+function start() {
+  computeAll(); renderViews(); renderPick(); buildMap(); renderFormula(); renderLists(); renderRegister(); paintMap(); renderPanel();
+}
+start(); setMode("snapshot");
+
+// Live data when the page can reach the database directly (opened as a file or hosted on the web).
+(async () => {
+  const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 8000);
+  try {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/rpc/mockup_inputs`, { method: "POST", signal: ctl.signal,
+      headers: { apikey: SUPABASE_KEY, "Content-Type": "application/json" }, body: "{}" });
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    const d = await r.json();
+    if (d && d.countries && d.countries.length) { data = d; start(); setMode("live"); }
+  } catch (_) { /* keep the snapshot */ } finally { clearTimeout(t); }
+})();
+</script>
